@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>水文與水理計算系統 - Intelli-Spect</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <h1>🌊 水文與水理計算系統 <span class="badge">PRO</span></h1>
+      <p>依據水土保持技術規範無因次降雨強度與曼寧公式</p>
+    </header>
+
+    <main>
+      <!-- 水文計算模組 -->
+      <section class="module" id="hydrology-module">
+        <h2>水文計算 (Hydrology)</h2>
+        
+        <div class="card-grid">
+          <!-- 1. 集流時間推估 -->
+          <div class="card card-time">
+            <h3>1. 集流時間推估 (tc)</h3>
+            <div class="input-group">
+              <label>流入長度 L1 (m)</label>
+              <input type="number" id="l1" value="100" step="1">
+            </div>
+            <div class="input-group">
+              <label>漫地流速 V1 (m/s) <small class="hint">一般漫地流速 0.3~0.6</small></label>
+              <input type="number" id="v1" value="0.6" step="0.1">
+            </div>
+            <hr class="divider">
+            <div class="input-group">
+              <label>流下長度 L2 (m)</label>
+              <input type="number" id="l2" value="500" step="1">
+            </div>
+            <div class="input-group">
+              <label>溪流起點高程 H1 (m)</label>
+              <input type="number" id="h1" value="150" step="0.1">
+            </div>
+            <div class="input-group">
+              <label>溪流終點高程 H2 (m)</label>
+              <input type="number" id="h2" value="100" step="0.1">
+            </div>
+            <div class="result-box mt-10">
+              <div>流入時間 t1: <b id="out-t1">--</b> min</div>
+              <div>流下時間 t2: <b id="out-t2">--</b> min <small>(Rziha公式)</small></div>
+              <div class="highlight-result">集流時間 tc: <b id="out-tc">--</b> min</div>
+            </div>
+          </div>
+
+          <!-- 2. 降雨強度推估 -->
+          <div class="card card-intensity">
+            <h3>2. 無因次降雨強度 (I)</h3>
+            <p class="formula-desc">I = (G + H × log₁₀T) × [A / (tc + B)^C] × I(60,25)</p>
+            <div class="input-group">
+              <label>重現期 T (年)</label>
+              <input type="number" id="return-T" value="50">
+            </div>
+            <div class="input-group">
+              <label>年平均降雨量 P (mm)</label>
+              <input type="number" id="param-P" value="2500" title="輸入計畫區之年平均降雨量">
+            </div>
+            <div class="result-box mt-10" style="padding: 0.5rem 1rem; margin-bottom: 0.5rem; background: var(--bg-color); border-left-color: var(--text-muted); font-size: 0.9em;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                <div>基準降雨強度 I(60,25): <b id="out-Ibase">--</b></div>
+                <div>參數 A: <b id="out-A">--</b></div>
+                <div>參數 B: <b>55</b></div>
+                <div>參數 C: <b id="out-C">--</b></div>
+                <div>參數 G: <b id="out-G">--</b></div>
+                <div>參數 H: <b id="out-H">--</b></div>
+              </div>
+            </div>
+            <div class="result-box mt-10">
+              <div class="highlight-result">設計降雨強度 I: <b id="out-I">--</b> mm/hr</div>
+            </div>
+          </div>
+
+          <!-- 3. 合理化洪峰流量 -->
+          <div class="card card-flow">
+            <h3>3. 合理化洪峰流量 (Q)</h3>
+            <p class="formula-desc">Q = 1/360 × C × I × A</p>
+            <div class="input-group">
+              <label>逕流係數 C</label>
+              <input type="number" id="c-coeff" value="0.8" step="0.05">
+            </div>
+            <div class="input-group">
+              <label>集水面積 A (ha)</label>
+              <input type="number" id="area-ha" value="10" step="0.1">
+            </div>
+            <div class="result-box mt-10 total-result">
+              <span>洪峰流量 Q:</span>
+              <span class="q-value"><b id="out-Q">--</b> cms</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 水理計算模組 -->
+      <section class="module mt-20" id="hydraulics-module">
+        <h2>水理檢算 (Hydraulics) <small class="text-muted">曼寧公式</small></h2>
+        
+        <div class="card-grid">
+          <div class="card card-hydraulic-input">
+            <h3>環境與斷面參數</h3>
+            <div class="input-group">
+              <label>斷面形式</label>
+              <select id="section-type">
+                <option value="trap">梯形 (Trapezoidal)</option>
+                <option value="rect">矩形 (Rectangular)</option>
+                <option value="circ">圓形管涵 (Circular)</option>
+                <option value="u-shape">U型溝 (U-Shape)</option>
+                <option value="v-shape">V型溝 (V-Shape)</option>
+              </select>
+            </div>
+            
+            <!-- 動態參數區 -->
+            <div id="section-params" class="dynamic-params">
+              <!-- JS 會動態注入 -->
+            </div>
+            
+            <hr class="divider">
+            <div class="input-group">
+              <label>粗糙係數 n</label>
+              <input type="number" id="hyd-n" value="0.015" step="0.001">
+            </div>
+            <div class="input-group">
+              <label>底床坡度 S (m/m)</label>
+              <input type="number" id="hyd-s" value="0.03" step="0.001">
+            </div>
+            <input type="hidden" id="hyd-q">
+
+            
+            <button class="btn-primary mt-10 w-full" id="btn-calc-hyd">執行疊代計算</button>
+          </div>
+
+          <div class="card card-hydraulic-result">
+            <h3>運算結果</h3>
+            <div class="calc-status" id="calc-status">請點擊執行計算。</div>
+            <div class="final-results hidden" id="final-results">
+              <div class="result-item">
+                <span class="label">容許流量 Qmax</span>
+                <span class="value" style="color: var(--accent);"><b id="out-qmax">--</b> cms</span>
+              </div>
+              <div class="result-item">
+                <span class="label">正常水深 yn</span>
+                <span class="value"><b id="out-yn">--</b> m</span>
+              </div>
+              <div class="result-item">
+                <span class="label">流速 V</span>
+                <span class="value"><b id="out-v">--</b> m/s</span>
+              </div>
+              <div class="result-item sub-item">
+                <span class="label">通水斷面積 A</span>
+                <span class="value"><b id="out-a">--</b> m²</span>
+              </div>
+              <div class="result-item sub-item">
+                <span class="label">潤周 P</span>
+                <span class="value"><b id="out-p">--</b> m</span>
+              </div>
+              <div class="result-item sub-item">
+                <span class="label">水力半徑 R</span>
+                <span class="value"><b id="out-r">--</b> m</span>
+              </div>
+
+              <h4 style="margin-top: 1rem; margin-bottom: 0.5rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">檢核結果</h4>
+              <div class="result-item">
+                <span class="label">流量檢核</span>
+                <span class="value"><b id="chk-flow">--</b></span>
+              </div>
+              <div class="result-item">
+                <span class="label">出水高檢核</span>
+                <span class="value"><b id="chk-fb">--</b></span>
+              </div>
+              <div class="result-item">
+                <span class="label">流速檢核</span>
+                <span class="value"><b id="chk-vel">--</b></span>
+              </div>
+            </div>
+            <div class="visualizer" id="section-viz">
+              <!-- 未來可在此用 Canvas 畫出斷面 -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div style="margin-top: 2rem; display: flex; justify-content: center;">
+        <button class="btn-primary" style="background: #ef4444; width: 100%; max-width: 400px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);" id="btn-reset">🗑️ 重新輸入 (清除並重置所有數值)</button>
+      </div>
+
+    </main>
+    <footer>
+      <p>&copy; 2026 版權所有 製作者：劉哲旻 | 專為工程師打造的水文水理工具</p>
+    </footer>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>

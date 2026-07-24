@@ -12,6 +12,16 @@
   --input-bg: #0f172a;
 }
 
+body.light-mode {
+  --bg-color: #f1f5f9;
+  --panel-bg: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border: #cbd5e1;
+  --input-bg: #f8fafc;
+  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -23,12 +33,56 @@ body {
   background-color: var(--bg-color);
   color: var(--text-main);
   line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 平滑切換背景與文字色 */
+.card, input, select, button, .result-box, hr {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .app-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  position: relative; /* 讓右上角按鈕能以 container 定位 */
+}
+
+/* 日夜模式切換按鈕樣式 */
+.theme-switch-wrapper {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  z-index: 100;
+}
+
+.theme-toggle-btn {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: var(--card-shadow);
+  transition: transform 0.2s ease, background-color 0.3s, border-color 0.3s;
+}
+
+.theme-toggle-btn:hover {
+  transform: scale(1.1) rotate(15deg);
+  border-color: var(--primary);
+}
+
+/* 主題圖示切換：暗色模式下顯示太陽 (☀️)，亮色模式下顯示月亮 (🌙) */
+body.light-mode .icon-sun {
+  display: none;
+}
+body:not(.light-mode) .icon-moon {
+  display: none;
 }
 
 header {

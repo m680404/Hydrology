@@ -427,3 +427,20 @@ if (!hasSavedState) {
   renderSectionParams();
   calcHydrology();
 }
+
+// ================= 主題切換 (日夜模式) =================
+const themeToggleBtn = document.getElementById('theme-toggle');
+const savedTheme = localStorage.getItem('hydroTheme');
+
+if (savedTheme === 'light') {
+  document.body.classList.add('light-mode');
+}
+
+if (themeToggleBtn) {
+  themeToggleBtn.addEventListener('click', () => {
+    document.body.classList.toggle('light-mode');
+    const currentTheme = document.body.classList.contains('light-mode') ? 'light' : 'dark';
+    localStorage.setItem('hydroTheme', currentTheme);
+  });
+}
+

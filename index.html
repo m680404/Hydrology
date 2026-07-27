@@ -189,8 +189,10 @@
         </div>
       </section>
 
-      <div style="margin-top: 2rem; display: flex; justify-content: center;">
-        <button class="btn-primary" style="background: #ef4444; width: 100%; max-width: 400px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);" id="btn-reset">🗑️ 重新輸入 (清除並重置所有數值)</button>
+      <!-- 底部操作按鈕 -->
+      <div class="actions-wrapper" style="margin-top: 2rem; display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        <button class="btn-primary" style="background: #ef4444; width: 100%; max-width: 300px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); margin: 0;" id="btn-reset">🗑️ 重新輸入 (清除並重置所有數值)</button>
+        <button class="btn-primary" style="background: var(--accent); width: 100%; max-width: 300px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); margin: 0;" id="btn-print-report">📄 輸出 A4 報告 (列印/PDF)</button>
       </div>
 
     </main>
@@ -198,6 +200,205 @@
       <p>&copy; 2026 版權所有 製作者：劉哲旻 | 專為工程師打造的水文水理工具</p>
     </footer>
   </div>
+
+  <!-- A4 列印報告專用 HTML 模板 (螢幕上預設隱藏，列印時顯示) -->
+  <div id="print-report-template" class="print-only">
+    <div class="report-header">
+      <h1>水文與水理計算報告書</h1>
+      <div class="report-meta" style="justify-content: center;">
+        <span>報告日期：<span id="rpt-date">--</span></span>
+      </div>
+    </div>
+    
+    <div class="report-section">
+      <h3>一、 設計水文參數與流量推估</h3>
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>參數項目</th>
+            <th>數值</th>
+            <th>單位</th>
+            <th>備註</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>流入長度 L1 / 漫地流速 V1</td>
+            <td><span id="rpt-l1">--</span> / <span id="rpt-v1">--</span></td>
+            <td>m / (m/s)</td>
+            <td>流入時間 t1 = <span id="rpt-t1">--</span> min</td>
+          </tr>
+          <tr>
+            <td>流下長度 L2 / 渠道坡度 S_ch</td>
+            <td><span id="rpt-l2">--</span> / <span id="rpt-slope-ch">--</span></td>
+            <td>m / (m/m)</td>
+            <td>流下時間 t2 = <span id="rpt-t2">--</span> min (Rziha公式)</td>
+          </tr>
+          <tr>
+            <td>集流時間 tc</td>
+            <td><b id="rpt-tc">--</b></td>
+            <td>min</td>
+            <td>tc = t1 + t2</td>
+          </tr>
+          <tr>
+            <td>年平均降雨量 P / 重現期 T</td>
+            <td><span id="rpt-p">--</span> / <span id="rpt-T">--</span></td>
+            <td>mm / 年</td>
+            <td>基準降雨強度 I(60,25) = <span id="rpt-ibase">--</span></td>
+          </tr>
+          <tr>
+            <td>設計降雨強度 I</td>
+            <td><b id="rpt-I">--</b></td>
+            <td>mm/hr</td>
+            <td>無因次降雨強度公式轉換</td>
+          </tr>
+          <tr>
+            <td>逕流係數 C / 集水面積 A</td>
+            <td><span id="rpt-c">--</span> / <span id="rpt-area">--</span></td>
+            <td>-- / ha</td>
+            <td>合理化洪峰流量 Q = 1/360 * C * I * A</td>
+          </tr>
+          <tr class="highlight-row">
+            <td>設計洪峰流量 Qd</td>
+            <td><b id="rpt-Qd">--</b></td>
+            <td>cms</td>
+            <td>帶入水理計算之設計流量</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="report-section">
+      <h3>二、 設計渠道斷面與水理檢算結果</h3>
+      <div class="report-row">
+        <div class="report-col">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>渠道參數</th>
+                <th>設計值</th>
+                <th>單位</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>斷面形式</td>
+                <td><b id="rpt-sectype">--</b></td>
+                <td>--</td>
+              </tr>
+              <tr id="row-rpt-b">
+                <td>渠道底寬 b</td>
+                <td><span id="rpt-b">--</span></td>
+                <td>m</td>
+              </tr>
+              <tr id="row-rpt-h">
+                <td>渠道深 H (或直徑 D)</td>
+                <td><span id="rpt-h">--</span></td>
+                <td>m</td>
+              </tr>
+              <tr id="row-rpt-z">
+                <td>側坡比 z (1:z)</td>
+                <td><span id="rpt-z">--</span></td>
+                <td>--</td>
+              </tr>
+              <tr>
+                <td>粗糙係數 n / 底床坡度 S</td>
+                <td><span id="rpt-n">--</span> / <span id="rpt-s">--</span></td>
+                <td>-- / (m/m)</td>
+              </tr>
+              <tr>
+                <td>規範出水高 Fb</td>
+                <td><span id="rpt-fb">--</span></td>
+                <td>m</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="report-col" style="display:flex; justify-content:center; align-items:center;">
+          <!-- SVG 示意圖複製到這裡 -->
+          <div id="rpt-viz-container" style="width: 250px; height: 170px; display: flex; justify-content: center; align-items: center;"></div>
+        </div>
+      </div>
+      
+      <table class="report-table" style="margin-top: 8px;">
+        <thead>
+          <tr>
+            <th>檢算項目</th>
+            <th>計算數值</th>
+            <th>單位</th>
+            <th>物理意義</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>正常水深 yn</td>
+            <td><b id="rpt-yn">--</b></td>
+            <td>m</td>
+            <td>曼寧公式二分法疊代求解水深</td>
+          </tr>
+          <tr>
+            <td>流速 V</td>
+            <td><span id="rpt-v">--</span></td>
+            <td>m/s</td>
+            <td>V = Q / A</td>
+          </tr>
+          <tr>
+            <td>通水斷面積 A / 潤周 P</td>
+            <td><span id="rpt-a">--</span> / <span id="rpt-p-val">--</span></td>
+            <td>m² / m</td>
+            <td>A = 過水面積，P = 濕周長</td>
+          </tr>
+          <tr>
+            <td>水力半徑 R</td>
+            <td><span id="rpt-r-val">--</span></td>
+            <td>m</td>
+            <td>R = A / P</td>
+          </tr>
+          <tr class="highlight-row">
+            <td>容許流量 Qmax</td>
+            <td><b id="rpt-qmax">--</b></td>
+            <td>cms</td>
+            <td>滿足設計出水高時的最大通水流量</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="report-section">
+      <h3>三、 安全檢核結論</h3>
+      <table class="report-table check-table">
+        <thead>
+          <tr>
+            <th>檢核項目</th>
+            <th>規範標準</th>
+            <th>計算實際值</th>
+            <th>檢核結果</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>1. 流量檢核</b></td>
+            <td>Qmax &ge; Qd</td>
+            <td>Qmax = <span id="chk-rpt-qmax">--</span> cms, Qd = <span id="chk-rpt-qd">--</span> cms</td>
+            <td><span id="chk-rpt-flow-res">--</span></td>
+          </tr>
+          <tr>
+            <td><b>2. 出水高檢核</b></td>
+            <td>實際出水高 &ge; Fb</td>
+            <td>實際出水高 = <span id="chk-rpt-actfb">--</span> m, Fb = <span id="chk-rpt-fb">--</span> m</td>
+            <td><span id="chk-rpt-fb-res">--</span></td>
+          </tr>
+          <tr>
+            <td><b>3. 流速檢核</b></td>
+            <td>流速 V &le; 6.10 m/s</td>
+            <td>流速 V = <span id="chk-rpt-v">--</span> m/s</td>
+            <td><span id="chk-rpt-vel-res">--</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>

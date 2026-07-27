@@ -711,15 +711,11 @@ function updateVisualizer() {
         </marker>
         
         <clipPath id="water-clip">
-          <rect x="-1000" y="${waterTopY}" width="2000" height="1000" />
+          <rect x="-1000" y="${waterTopY}" width="2000" height="${svgH}" />
         </clipPath>
       </defs>
       
-      <!-- 1. 背景底色填滿 -->
-      ${type === 'circ' ? 
-        `<circle cx="${toSvgX(0)}" cy="${toSvgY(D/2)}" r="${(D/2)*scale}" fill="var(--text-muted)" opacity="0.08" />` : 
-        `<path d="${closedPath}" fill="var(--text-muted)" opacity="0.08" />`
-      }
+
       
       <!-- 2. 水體 -->
       ${svgWaterElement}
@@ -803,6 +799,241 @@ if (!hasSavedState) {
   renderSectionParams();
   calcHydrology();
   calcHydraulics(true);
+}
+
+// ================= 輸出 A4 報告列印邏輯 =================
+const btnPrintReport = document.getElementById('btn-print-report');
+if (btnPrintReport) {
+  btnPrintReport.addEventListener('click', () => {
+    // 1. 設定日期
+    const dateEl = document.getElementById('rpt-date');
+    if (dateEl) {
+      const today = new Date();
+      dateEl.innerText = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+    }
+
+    // 2. 收集水文參數並填入
+    const hydrologyMap = {
+      'l1': 'rpt-l1',
+      'v1': 'rpt-v1',
+      'l2': 'rpt-l2',
+      'return-T': 'rpt-T',
+      'param-P': 'rpt-p',
+      'c-coeff': 'rpt-c',
+      'area-ha': 'rpt-area'
+    };
+
+    // 計算流下渠道坡度 S_ch
+    const h1_val = parseFloat(document.getElementById('h1').value) || 0;
+    const h2_val = parseFloat(document.getElementById('h2').value) || 0;
+    const l2_val = parseFloat(document.getElementById('l2').value) || 1;
+    const s_ch = Math.max(0, h1_val - h2_val) / l2_val;
+    const sChEl = document.getElementById('rpt-slope-ch');
+    if (sChEl) sChEl.innerText = s_ch.toFixed(4);
+
+    // 填寫基本水文輸入
+    Object.keys(hydrologyMap).forEach(id => {
+      const src = document.getElementById(id);
+      const dest = document.getElementById(hydrologyMap[id]);
+      if (src && dest) {
+        dest.innerText = src.value;
+      }
+    });
+
+    // 填寫水文計算結果
+    const hydOutputs = {
+      'out-t1': 'rpt-t1',
+      'out-t2': 'rpt-t2',
+      'out-tc': 'rpt-tc',
+      'out-Ibase': 'rpt-ibase',
+      'out-I': 'rpt-I',
+      'out-Q': 'rpt-Qd'
+    };
+    Object.keys(hydOutputs).forEach(id => {
+      const src = document.getElementById(id);
+      const dest = document.getElementById(hydOutputs[id]);
+      if (src && dest) {
+        dest.innerText = src.innerText;
+      }
+    });
+
+    // 3. 收集水理參數並填入
+    // 翻譯斷面形式
+    const secType = els.secType.value;
+    const secTypeNames = {
+      'trap': '梯形斷面 (Trapezoidal)',
+      'rect': '矩形斷面 (Rectangular)',
+      'circ': '圓形管涵 (Circular)',
+      'u-shape': 'U型溝斷面 (U-Shape)',
+      'v-shape': 'V型溝斷面 (V-Shape)'
+    };
+    const rptSecTypeEl = document.getElementById('rpt-sectype');
+    if (rptSecTypeEl) rptSecTypeEl.innerText = secTypeNames[secType] || secType;
+
+    // 水理環境參數
+    const hydParams = {
+      'hyd-n': 'rpt-n',
+      'hyd-s': 'rpt-s'
+    };
+    Object.keys(hydParams).forEach(id => {
+      const src = document.getElementById(id);
+      const dest = document.getElementById(hydParams[id]);
+      if (src && dest) dest.innerText = src.value;
+    });
+
+    // 動態幾何參數填寫 (需要處理特定斷面隱藏不相關表格列)
+    const rowB = document.getElementById('row-rpt-b');
+    const rowZ = document.getElementById('row-rpt-z');
+    const rowH = document.getElementById('row-rpt-h');
+
+    // 重設顯示與標題文字
+    if (rowB) rowB.style.display = '';
+    if (rowZ) rowZ.style.display = '';
+    if (rowH) {
+      rowH.style.display = '';
+      const labelCell = rowH.cells[0];
+      if (labelCell) labelCell.innerText = '渠道深 H';
+    }
+
+    const secBEl = document.getElementById('sec-b');
+    const secHEl = document.getElementById('sec-h');
+    const secZEl = document.getElementById('sec-z');
+    const secZ1El = document.getElementById('sec-z1');
+    const secZ2El = document.getElementById('sec-z2');
+    const secDEl = document.getElementById('sec-d');
+    const secFbEl = document.getElementById('sec-fb');
+
+    const rptB = document.getElementById('rpt-b');
+    const rptH = document.getElementById('rpt-h');
+    const rptZ = document.getElementById('rpt-z');
+    const rptFb = document.getElementById('rpt-fb');
+
+    if (rptFb && secFbEl) rptFb.innerText = parseFloat(secFbEl.value).toFixed(1);
+
+    if (secType === 'rect') {
+      if (rptB && secBEl) rptB.innerText = parseFloat(secBEl.value).toFixed(1);
+      if (rptH && secHEl) rptH.innerText = parseFloat(secHEl.value).toFixed(1);
+      if (rowZ) rowZ.style.display = 'none'; // 矩形無坡比
+    } 
+    else if (secType === 'trap') {
+      if (rptB && secBEl) rptB.innerText = parseFloat(secBEl.value).toFixed(1);
+      if (rptH && secHEl) rptH.innerText = parseFloat(secHEl.value).toFixed(1);
+      if (rptZ && secZEl) rptZ.innerText = `水平 ${parseFloat(secZEl.value).toFixed(1)} : 垂直 1`;
+    } 
+    else if (secType === 'circ') {
+      if (rowB) rowB.style.display = 'none'; // 圓形無底寬
+      if (rowZ) rowZ.style.display = 'none'; // 圓形無坡比
+      if (rptH && secDEl) {
+        const labelCell = rowH.cells[0];
+        if (labelCell) labelCell.innerText = '管涵直徑 D';
+        rptH.innerText = parseFloat(secDEl.value).toFixed(1);
+      }
+    } 
+    else if (secType === 'u-shape') {
+      if (rptB && secBEl) rptB.innerText = parseFloat(secBEl.value).toFixed(1);
+      if (rptH && secHEl) rptH.innerText = parseFloat(secHEl.value).toFixed(1);
+      if (rowZ) rowZ.style.display = 'none'; // U型底為半圓無側坡
+    } 
+    else if (secType === 'v-shape') {
+      if (rowB) rowB.style.display = 'none'; // V型無底寬
+      if (rptH && secHEl) rptH.innerText = parseFloat(secHEl.value).toFixed(1);
+      if (rptZ && secZ1El && secZ2El) {
+        rptZ.innerText = `左 z1=${parseFloat(secZ1El.value).toFixed(1)} / 右 z2=${parseFloat(secZ2El.value).toFixed(1)}`;
+      }
+    }
+
+    // 填寫水理檢算結果
+    const rptResultMap = {
+      'out-yn': 'rpt-yn',
+      'out-v': 'rpt-v',
+      'out-a': 'rpt-a',
+      'out-p': 'rpt-p-val',
+      'out-r': 'rpt-r-val',
+      'out-qmax': 'rpt-qmax'
+    };
+    Object.keys(rptResultMap).forEach(id => {
+      const src = document.getElementById(id);
+      const dest = document.getElementById(rptResultMap[id]);
+      if (src && dest) dest.innerText = src.innerText;
+    });
+
+    // 4. 填寫安全檢核結論與樣式
+    // Qd
+    const Qd_val = parseFloat(document.getElementById('out-Q').innerText) || 0;
+    const QdRptEl = document.getElementById('chk-rpt-qd');
+    if (QdRptEl) QdRptEl.innerText = Qd_val.toFixed(1);
+
+    // Qmax
+    const Qmax_val = parseFloat(document.getElementById('out-qmax').innerText) || 0;
+    const QmaxRptEl = document.getElementById('chk-rpt-qmax');
+    if (QmaxRptEl) QmaxRptEl.innerText = Qmax_val.toFixed(1);
+
+    // 流量檢核結果
+    const flowResEl = document.getElementById('chk-rpt-flow-res');
+    if (flowResEl) {
+      if (Qmax_val >= Qd_val) {
+        flowResEl.innerText = '● 合格 (OK)';
+        flowResEl.className = 'check-ok';
+      } else {
+        flowResEl.innerText = '▲ 斷面不足 (NG)';
+        flowResEl.className = 'check-warning';
+      }
+    }
+
+    // 實際出水高 與 Fb
+    const yn_val = parseFloat(document.getElementById('out-yn').innerText) || 0;
+    const h_val = secType === 'circ' ? (parseFloat(secDEl.value) || 0) : (parseFloat(secHEl.value) || 0);
+    const actFb_val = Math.max(0, h_val - yn_val);
+    const actFbRptEl = document.getElementById('chk-rpt-actfb');
+    if (actFbRptEl) actFbRptEl.innerText = actFb_val.toFixed(1);
+
+    const Fb_val = parseFloat(secFbEl ? secFbEl.value : 0) || 0;
+    const FbRptEl = document.getElementById('chk-rpt-fb');
+    if (FbRptEl) FbRptEl.innerText = Fb_val.toFixed(1);
+
+    // 出水高檢核結果
+    const fbResEl = document.getElementById('chk-rpt-fb-res');
+    if (fbResEl) {
+      if (actFb_val >= Fb_val) {
+        fbResEl.innerText = '● 合格 (OK)';
+        fbResEl.className = 'check-ok';
+      } else {
+        fbResEl.innerText = '▲ 出水高不足 (NG)';
+        fbResEl.className = 'check-warning';
+      }
+    }
+
+    // 流速檢核
+    const v_val = parseFloat(document.getElementById('out-v').innerText) || 0;
+    const vRptEl = document.getElementById('chk-rpt-v');
+    if (vRptEl) vRptEl.innerText = v_val.toFixed(1);
+
+    // 流速檢核結果
+    const velResEl = document.getElementById('chk-rpt-vel-res');
+    if (velResEl) {
+      if (v_val <= 6.1) {
+        velResEl.innerText = '● 合格 (OK)';
+        velResEl.className = 'check-ok';
+      } else {
+        velResEl.innerText = '▲ 流速過快 (需消能)';
+        velResEl.className = 'check-warning';
+      }
+    }
+
+    // 5. 複製 SVG 示意圖，並替換 clip-path ID 避免與主網頁 ID 衝突
+    const vizContainer = document.getElementById('rpt-viz-container');
+    const originalViz = document.getElementById('section-viz');
+    if (vizContainer && originalViz) {
+      let svgContent = originalViz.innerHTML;
+      // 替換 ID 避免衝突
+      svgContent = svgContent.replace(/id="water-clip"/g, 'id="print-water-clip"');
+      svgContent = svgContent.replace(/url\(#water-clip\)/g, 'url(#print-water-clip)');
+      vizContainer.innerHTML = svgContent;
+    }
+
+    // 6. 觸發列印
+    window.print();
+  });
 }
 
 // ================= 主題切換 (日夜模式) =================

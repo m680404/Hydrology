@@ -392,3 +392,193 @@ footer {
   border-top: 1px solid var(--border);
   font-size: 0.85rem;
 }
+
+/* ================= A4 列印報告樣式 ================= */
+.print-only {
+  display: none;
+}
+
+@media print {
+  /* 隱藏主網頁，只印出報告模板 */
+  .app-container, header, footer, #btn-reset, #btn-print-report, .theme-switch-wrapper {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  html, body {
+    background-color: #ffffff !important;
+    color: #111111 !important;
+    font-family: "PingFang TC", "Heiti TC", "Microsoft JhengHei", sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.35;
+    margin: 0;
+    padding: 12mm 15mm; /* 代替 margin，保留報告周邊間距 */
+    box-sizing: border-box;
+  }
+  
+  @page {
+    size: A4 portrait;
+    margin: 0; /* 隱藏瀏覽器預設之頁首頁尾(日期、URL) */
+  }
+  
+  .report-header {
+    text-align: center;
+    border-bottom: 2.5px double #111;
+    padding-bottom: 4px;
+    margin-bottom: 12px;
+  }
+  
+  .report-header h1 {
+    font-size: 18pt;
+    margin: 0;
+    font-weight: 700;
+    color: #000;
+    letter-spacing: 2px;
+  }
+  
+  .report-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 8.5pt;
+    color: #333;
+    margin-top: 4px;
+  }
+  
+  .report-section {
+    margin-bottom: 10px;
+  }
+  
+  .report-section h3 {
+    font-size: 10.5pt;
+    margin: 0 0 5px 0;
+    color: #000;
+    border-left: 4.5px solid #2563eb;
+    padding-left: 6px;
+    font-weight: 600;
+  }
+  
+  .report-row {
+    display: flex;
+    gap: 15px;
+    align-items: stretch;
+  }
+  
+  .report-col {
+    flex: 1;
+  }
+  
+  /* 經典工程三線表 */
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 6px;
+    font-size: 9pt;
+  }
+  
+  .report-table th, .report-table td {
+    padding: 3.5px 5px;
+    text-align: left;
+  }
+  
+  /* 三線表之粗線與細線 */
+  .report-table thead tr {
+    border-top: 1.5pt solid #000000;
+    border-bottom: 1pt solid #000000;
+  }
+  
+  .report-table tbody tr:last-child {
+    border-bottom: 1.5pt solid #000000;
+  }
+  
+  .report-table td {
+    border-bottom: 0.5pt solid #e5e7eb;
+  }
+  
+  .report-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  
+  .report-table th {
+    font-weight: bold;
+    background-color: #f3f4f6 !important;
+    color: #000;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .highlight-row {
+    font-weight: bold;
+    background-color: #f9fafb !important;
+  }
+  
+  .highlight-row td b {
+    color: #1d4ed8;
+    font-size: 10pt;
+  }
+  
+  /* 檢核結果色彩列印設定 */
+  .check-table td span, .check-table td b {
+    font-weight: bold;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .check-ok {
+    color: #047857 !important; /* 綠色 */
+  }
+  
+  .check-warning {
+    color: #b91c1c !important; /* 紅色 */
+  }
+
+  /* 列印時強制 SVG 示意圖色彩覆寫為白底黑字，確保紙張質感 */
+  #rpt-viz-container svg {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  
+  #rpt-viz-container .svg-channel {
+    stroke: #000000 !important;
+    stroke-width: 3.5px;
+  }
+  
+  #rpt-viz-container .svg-dim-line {
+    stroke: #4b5563 !important;
+    stroke-width: 1px;
+  }
+  
+  #rpt-viz-container .svg-dim-extension {
+    stroke: #9ca3af !important;
+    stroke-width: 1px;
+    stroke-dasharray: 2, 2;
+    opacity: 0.7;
+  }
+  
+  #rpt-viz-container .svg-dim-text {
+    fill: #000000 !important;
+    text-shadow: none !important;
+    font-weight: bold;
+  }
+  
+  #rpt-viz-container .svg-water {
+    fill: #93c5fd !important; /* 淺藍色過水漸層 */
+    opacity: 0.65 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  #rpt-viz-container .svg-water-top {
+    stroke: #1d4ed8 !important;
+    stroke-width: 2.5px;
+  }
+  
+  #rpt-viz-container .svg-slope-triangle {
+    stroke: #374151 !important;
+    stroke-width: 1px;
+  }
+
+}

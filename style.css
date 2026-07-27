@@ -313,6 +313,77 @@ header p {
   color: var(--accent);
 }
 
+/* 水理示意圖 */
+.visualizer {
+  margin-top: 1.5rem;
+  background-color: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 320px;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.visualizer svg {
+  width: 100%;
+  height: 100%;
+  max-width: 500px;
+  max-height: 320px;
+  display: block;
+}
+
+.svg-channel {
+  stroke: var(--text-main);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.svg-water {
+  fill: url(#waterGrad);
+  opacity: 0.75;
+  transition: all 0.3s ease;
+}
+
+.svg-water-top {
+  stroke: #3b82f6;
+  stroke-width: 2;
+  fill: none;
+}
+
+.svg-dim-line {
+  stroke: var(--text-muted);
+  stroke-width: 1;
+}
+
+.svg-dim-extension {
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  stroke-dasharray: 2, 2;
+  opacity: 0.5;
+}
+
+.svg-dim-text {
+  fill: var(--text-main);
+  font-size: 16px;
+  font-family: inherit;
+  font-weight: 500;
+  text-shadow: 0 1px 2px var(--bg-color);
+}
+
+.svg-slope-triangle {
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  fill: none;
+  opacity: 0.7;
+}
+
 footer {
   text-align: center;
   color: var(--text-muted);

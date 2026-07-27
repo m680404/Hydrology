@@ -138,13 +138,13 @@
             </div>
             <input type="hidden" id="hyd-q">
 
-            
-            <button class="btn-primary mt-10 w-full" id="btn-calc-hyd">執行疊代計算</button>
+            <!-- 示意圖移至參數下方 -->
+            <div class="visualizer" id="section-viz"></div>
           </div>
 
           <div class="card card-hydraulic-result">
             <h3>運算結果</h3>
-            <div class="calc-status" id="calc-status">請點擊執行計算。</div>
+            <div class="calc-status" id="calc-status">請輸入參數以進行計算。</div>
             <div class="final-results hidden" id="final-results">
               <div class="result-item">
                 <span class="label">容許流量 Qmax</span>
@@ -184,9 +184,6 @@
                 <span class="label">流速檢核</span>
                 <span class="value"><b id="chk-vel">--</b></span>
               </div>
-            </div>
-            <div class="visualizer" id="section-viz">
-              <!-- 未來可在此用 Canvas 畫出斷面 -->
             </div>
           </div>
         </div>

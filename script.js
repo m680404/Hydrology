@@ -42,7 +42,60 @@ const els = {
   chkFlow: document.getElementById('chk-flow'),
   chkFb: document.getElementById('chk-fb'),
   chkVel: document.getElementById('chk-vel'),
+
+  // 模式切換與直接輸入流量
+  tabHydrology: document.getElementById('tab-hydrology'),
+  tabDirect: document.getElementById('tab-direct'),
+  hydrologyModule: document.getElementById('hydrology-module'),
+  directFlowModule: document.getElementById('direct-flow-module'),
+  directQInput: document.getElementById('direct-q-input'),
 };
+
+// 當前流量來源模式：'hydrology' (無因次降雨強度推估) 或 'direct' (直接輸入洪峰流量)
+let currentFlowMode = 'hydrology';
+
+function setFlowMode(mode, shouldSave = true) {
+  currentFlowMode = mode === 'direct' ? 'direct' : 'hydrology';
+
+  if (els.tabHydrology && els.tabDirect) {
+    els.tabHydrology.classList.toggle('active', currentFlowMode === 'hydrology');
+    els.tabDirect.classList.toggle('active', currentFlowMode === 'direct');
+  }
+
+  if (els.hydrologyModule && els.directFlowModule) {
+    els.hydrologyModule.classList.toggle('hidden', currentFlowMode !== 'hydrology');
+    els.directFlowModule.classList.toggle('hidden', currentFlowMode !== 'direct');
+  }
+
+  if (currentFlowMode === 'direct') {
+    const directQ = parseFloat(els.directQInput ? els.directQInput.value : 0) || 0;
+    els.hydQ.value = directQ.toFixed(2);
+    calcHydraulics(true);
+  } else {
+    calcHydrology();
+    calcHydraulics(true);
+  }
+
+  if (shouldSave) {
+    saveState();
+  }
+}
+
+if (els.tabHydrology) {
+  els.tabHydrology.addEventListener('click', () => setFlowMode('hydrology'));
+}
+if (els.tabDirect) {
+  els.tabDirect.addEventListener('click', () => setFlowMode('direct'));
+}
+if (els.directQInput) {
+  els.directQInput.addEventListener('input', () => {
+    if (currentFlowMode === 'direct') {
+      const directQ = parseFloat(els.directQInput.value) || 0;
+      els.hydQ.value = directQ.toFixed(2);
+      calcHydraulics(true);
+    }
+  });
+}
 
 // ================= 水文計算 =================
 
@@ -112,7 +165,9 @@ function calcHydrology() {
   const Q = (cCoeff * intensity * area) / 360;
 
   els.outQ.innerText = Q.toFixed(2);
-  els.hydQ.value = Q.toFixed(2); // 自動帶入水理計算的設計流量
+  if (currentFlowMode === 'hydrology') {
+    els.hydQ.value = Q.toFixed(2); // 自動帶入水理計算的設計流量
+  }
 }
 
 // 綁定水文學更新事件
@@ -739,6 +794,7 @@ function updateVisualizer() {
 
 // 狀態儲存與還原 (localStorage)
 function saveState() {
+  appMemory.flowMode = currentFlowMode;
   document.querySelectorAll('input:not([id^="sec-"]):not([id="hyd-n"]):not([type="hidden"]), select').forEach(el => {
     if (el.id) appMemory[el.id] = el.value;
   });
@@ -769,14 +825,15 @@ function loadState() {
       
       // 復原非斷面特化數值
       Object.keys(appMemory).forEach(id => {
-        if (id === 'sections') return;
+        if (id === 'sections' || id === 'flowMode') return;
         const el = document.getElementById(id);
         if (el) el.value = appMemory[id];
       });
       
-      // 自動觸發水文與水理計算
+      // 復原流量來源模式並觸發計算
+      const savedMode = appMemory.flowMode || 'hydrology';
       calcHydrology();
-      calcHydraulics(false);
+      setFlowMode(savedMode, false);
       return true;
     } catch(e) {
       console.error('復原數值失敗', e);
@@ -798,7 +855,7 @@ const hasSavedState = loadState();
 if (!hasSavedState) {
   renderSectionParams();
   calcHydrology();
-  calcHydraulics(true);
+  setFlowMode('hydrology', false);
 }
 
 // ================= 輸出 A4 報告列印邏輯 =================
@@ -812,50 +869,67 @@ if (btnPrintReport) {
       dateEl.innerText = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
     }
 
-    // 2. 收集水文參數並填入
-    const hydrologyMap = {
-      'l1': 'rpt-l1',
-      'v1': 'rpt-v1',
-      'l2': 'rpt-l2',
-      'return-T': 'rpt-T',
-      'param-P': 'rpt-p',
-      'c-coeff': 'rpt-c',
-      'area-ha': 'rpt-area'
-    };
+    // 2. 收集水文參數並填入 (依流量模式決定是否顯示水文推估過程)
+    const hydroRows = document.querySelectorAll('.rpt-hydro-row');
+    const sec1Title = document.getElementById('rpt-sec1-title');
+    const rptQdNote = document.getElementById('rpt-qd-note');
+    const rptQdEl = document.getElementById('rpt-Qd');
 
-    // 計算流下渠道坡度 S_ch
-    const h1_val = parseFloat(document.getElementById('h1').value) || 0;
-    const h2_val = parseFloat(document.getElementById('h2').value) || 0;
-    const l2_val = parseFloat(document.getElementById('l2').value) || 1;
-    const s_ch = Math.max(0, h1_val - h2_val) / l2_val;
-    const sChEl = document.getElementById('rpt-slope-ch');
-    if (sChEl) sChEl.innerText = s_ch.toFixed(4);
+    if (currentFlowMode === 'direct') {
+      hydroRows.forEach(row => { row.style.display = 'none'; });
+      if (sec1Title) sec1Title.innerText = '一、 已知設計洪峰流量設定';
+      if (rptQdNote) rptQdNote.innerText = '直接指定已知設計洪峰流量（快速檢算模式）';
+      const directQVal = parseFloat(els.directQInput ? els.directQInput.value : 0) || 0;
+      if (rptQdEl) rptQdEl.innerText = directQVal.toFixed(2);
+    } else {
+      hydroRows.forEach(row => { row.style.display = ''; });
+      if (sec1Title) sec1Title.innerText = '一、 設計水文參數與流量推估';
+      if (rptQdNote) rptQdNote.innerText = '帶入水理計算之設計流量';
 
-    // 填寫基本水文輸入
-    Object.keys(hydrologyMap).forEach(id => {
-      const src = document.getElementById(id);
-      const dest = document.getElementById(hydrologyMap[id]);
-      if (src && dest) {
-        dest.innerText = src.value;
-      }
-    });
+      const hydrologyMap = {
+        'l1': 'rpt-l1',
+        'v1': 'rpt-v1',
+        'l2': 'rpt-l2',
+        'return-T': 'rpt-T',
+        'param-P': 'rpt-p',
+        'c-coeff': 'rpt-c',
+        'area-ha': 'rpt-area'
+      };
 
-    // 填寫水文計算結果
-    const hydOutputs = {
-      'out-t1': 'rpt-t1',
-      'out-t2': 'rpt-t2',
-      'out-tc': 'rpt-tc',
-      'out-Ibase': 'rpt-ibase',
-      'out-I': 'rpt-I',
-      'out-Q': 'rpt-Qd'
-    };
-    Object.keys(hydOutputs).forEach(id => {
-      const src = document.getElementById(id);
-      const dest = document.getElementById(hydOutputs[id]);
-      if (src && dest) {
-        dest.innerText = src.innerText;
-      }
-    });
+      // 計算流下渠道坡度 S_ch
+      const h1_val = parseFloat(document.getElementById('h1').value) || 0;
+      const h2_val = parseFloat(document.getElementById('h2').value) || 0;
+      const l2_val = parseFloat(document.getElementById('l2').value) || 1;
+      const s_ch = Math.max(0, h1_val - h2_val) / l2_val;
+      const sChEl = document.getElementById('rpt-slope-ch');
+      if (sChEl) sChEl.innerText = s_ch.toFixed(4);
+
+      // 填寫基本水文輸入
+      Object.keys(hydrologyMap).forEach(id => {
+        const src = document.getElementById(id);
+        const dest = document.getElementById(hydrologyMap[id]);
+        if (src && dest) {
+          dest.innerText = src.value;
+        }
+      });
+
+      // 填寫水文計算結果
+      const hydOutputs = {
+        'out-t1': 'rpt-t1',
+        'out-t2': 'rpt-t2',
+        'out-tc': 'rpt-tc',
+        'out-Ibase': 'rpt-ibase',
+        'out-I': 'rpt-I',
+        'out-Q': 'rpt-Qd'
+      };
+      Object.keys(hydOutputs).forEach(id => {
+        const src = document.getElementById(id);
+        const dest = document.getElementById(hydOutputs[id]);
+        if (src && dest) {
+          dest.innerText = src.innerText;
+        }
+      });
+    }
 
     // 3. 收集水理參數並填入
     // 翻譯斷面形式
@@ -958,10 +1032,10 @@ if (btnPrintReport) {
     });
 
     // 4. 填寫安全檢核結論與樣式
-    // Qd
-    const Qd_val = parseFloat(document.getElementById('out-Q').innerText) || 0;
+    // Qd (依據目前生效的設計流量 hyd-q)
+    const Qd_val = parseFloat(els.hydQ.value) || 0;
     const QdRptEl = document.getElementById('chk-rpt-qd');
-    if (QdRptEl) QdRptEl.innerText = Qd_val.toFixed(1);
+    if (QdRptEl) QdRptEl.innerText = Qd_val.toFixed(2);
 
     // Qmax
     const Qmax_val = parseFloat(document.getElementById('out-qmax').innerText) || 0;

@@ -18,12 +18,22 @@
     <header>
       <h1>🌊 水文與水理計算系統 <span class="badge">PRO</span></h1>
       <p>依據水土保持技術規範無因次降雨強度與曼寧公式</p>
+      
+      <!-- 模式切換頁籤 -->
+      <div class="mode-tabs" role="tablist">
+        <button type="button" class="mode-tab active" data-mode="hydrology" id="tab-hydrology">
+          🌧️ 無因次降雨強度推估流量
+        </button>
+        <button type="button" class="mode-tab" data-mode="direct" id="tab-direct">
+          ⚡ 直接輸入已知洪峰流量
+        </button>
+      </div>
     </header>
 
     <main>
-      <!-- 水文計算模組 -->
+      <!-- 模式一：水文計算模組 (無因次降雨強度推估) -->
       <section class="module" id="hydrology-module">
-        <h2>水文計算 (Hydrology)</h2>
+        <h2>水文計算 (Hydrology) <small class="text-muted">無因次降雨強度法</small></h2>
         
         <div class="card-grid">
           <!-- 1. 集流時間推估 -->
@@ -99,6 +109,27 @@
             <div class="result-box mt-10 total-result">
               <span>洪峰流量 Q:</span>
               <span class="q-value"><b id="out-Q">--</b> cms</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 模式二：直接輸入已知洪峰流量模組 -->
+      <section class="module hidden" id="direct-flow-module">
+        <h2>已知流量設定 (Direct Flow Input) <small class="text-muted">快速檢算設計斷面</small></h2>
+        
+        <div class="card card-direct-flow">
+          <div class="direct-flow-content">
+            <div class="direct-flow-info">
+              <h3>⚡ 直接指定設計洪峰流量 (Qd)</h3>
+              <p class="text-muted">適用於已有核定水文報告、上位計畫流量，或現場快速試算渠道斷面尺寸的情境。</p>
+            </div>
+            <div class="direct-flow-input-wrap">
+              <label for="direct-q-input">設計洪峰流量 Qd (cms)</label>
+              <div class="direct-input-box">
+                <input type="number" id="direct-q-input" value="3.50" step="0.1" min="0.01">
+                <span class="unit-badge">cms (m³/s)</span>
+              </div>
             </div>
           </div>
         </div>
@@ -211,7 +242,7 @@
     </div>
     
     <div class="report-section">
-      <h3>一、 設計水文參數與流量推估</h3>
+      <h3 id="rpt-sec1-title">一、 設計水文參數與流量推估</h3>
       <table class="report-table">
         <thead>
           <tr>
@@ -222,37 +253,37 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
+          <tr class="rpt-hydro-row">
             <td>流入長度 L1 / 漫地流速 V1</td>
             <td><span id="rpt-l1">--</span> / <span id="rpt-v1">--</span></td>
             <td>m / (m/s)</td>
             <td>流入時間 t1 = <span id="rpt-t1">--</span> min</td>
           </tr>
-          <tr>
+          <tr class="rpt-hydro-row">
             <td>流下長度 L2 / 渠道坡度 S_ch</td>
             <td><span id="rpt-l2">--</span> / <span id="rpt-slope-ch">--</span></td>
             <td>m / (m/m)</td>
             <td>流下時間 t2 = <span id="rpt-t2">--</span> min (Rziha公式)</td>
           </tr>
-          <tr>
+          <tr class="rpt-hydro-row">
             <td>集流時間 tc</td>
             <td><b id="rpt-tc">--</b></td>
             <td>min</td>
             <td>tc = t1 + t2</td>
           </tr>
-          <tr>
+          <tr class="rpt-hydro-row">
             <td>年平均降雨量 P / 重現期 T</td>
             <td><span id="rpt-p">--</span> / <span id="rpt-T">--</span></td>
             <td>mm / 年</td>
             <td>基準降雨強度 I(60,25) = <span id="rpt-ibase">--</span></td>
           </tr>
-          <tr>
+          <tr class="rpt-hydro-row">
             <td>設計降雨強度 I</td>
             <td><b id="rpt-I">--</b></td>
             <td>mm/hr</td>
             <td>無因次降雨強度公式轉換</td>
           </tr>
-          <tr>
+          <tr class="rpt-hydro-row">
             <td>逕流係數 C / 集水面積 A</td>
             <td><span id="rpt-c">--</span> / <span id="rpt-area">--</span></td>
             <td>-- / ha</td>
@@ -262,7 +293,7 @@
             <td>設計洪峰流量 Qd</td>
             <td><b id="rpt-Qd">--</b></td>
             <td>cms</td>
-            <td>帶入水理計算之設計流量</td>
+            <td id="rpt-qd-note">帶入水理計算之設計流量</td>
           </tr>
         </tbody>
       </table>

@@ -116,8 +116,115 @@ header p {
   margin-top: 0.5rem;
 }
 
+/* 流量模式切換頁籤 */
+.mode-tabs {
+  display: inline-flex;
+  background-color: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.35rem;
+  margin-top: 1.5rem;
+  gap: 0.35rem;
+  box-shadow: var(--card-shadow);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.mode-tab {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.6rem 1.4rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+}
+
+.mode-tab:hover {
+  color: var(--text-main);
+}
+
+.mode-tab.active {
+  background: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+}
+
 .module {
   background-color: transparent;
+}
+
+.module.hidden {
+  display: none;
+}
+
+/* 直接輸入洪峰流量卡片樣式 */
+.card-direct-flow {
+  border-left: 5px solid var(--primary);
+  margin-bottom: 2rem;
+}
+
+.direct-flow-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.direct-flow-info h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.4rem;
+  color: var(--primary);
+}
+
+.direct-flow-input-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 260px;
+}
+
+.direct-flow-input-wrap label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+.direct-input-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.direct-input-box input {
+  width: 160px;
+  padding: 0.65rem 0.9rem;
+  border-radius: 8px;
+  border: 2px solid var(--primary);
+  background-color: var(--input-bg);
+  color: var(--text-main);
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-family: inherit;
+}
+
+.direct-input-box input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.unit-badge {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--bg-color);
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
 }
 
 .module h2 {
